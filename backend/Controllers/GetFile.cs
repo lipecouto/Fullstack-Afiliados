@@ -1,14 +1,30 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Npgsql;
+using backend.Configuration;
+//using DotNetEnv;
+
+
 namespace backend.Controllers
 {
     [ApiController]
     //definindo a rota do arquivo
     [Route("getFile")]
     public class FileController : ControllerBase
-    {
+    {   
+        
+        // Carrega as variáveis de ambiente do arquivo .env
+        private readonly string connectionString;
+        
+        public FileController()
+        {   
+            DatabaseConfiguration.LoadConfiguration();
+            connectionString = DatabaseConfiguration.GetConnectionString();
+        }
+
         [HttpPost (Name = "getFile")]
+        
         public IActionResult GetFile([FromForm] IFormFile file)
         {
             try
@@ -56,6 +72,42 @@ namespace backend.Controllers
                         };
 
                         transactions.Add(transaction);
+                    }
+
+                }
+                using (var connection = new NpgsqlConnection(connectionString))
+                {
+                    connection.Open();
+                    using (var command = new NpgsqlCommand()){
+                        command.Connection = connection;
+                        foreach (var transaction in transactions){
+
+                            if (transaction.Type == null){
+                                throw new Exception("Campo 'tipo' inválido no arquivo.");
+                            }
+                             if (transaction.Date == null){
+                                throw new Exception("Campo 'Data' inválido no arquivo.");
+                            }
+                            if (transaction.Product == null){
+                                throw new Exception("Campo 'Produto' inválido no arquivo.");
+                            }
+                            
+                            if (transaction.Seller == null){
+                                throw new Exception("Campo 'Vendedor' inválido no arquivo.");
+                            }
+                            
+                            if (transaction.Amount  <= 0 ){
+                                throw new Exception("Campo 'Valor' zerado é inválido");
+                            }
+                            
+                            command.CommandText = "INSERT INTO transaction (tipo, date, product, amount, seller) VALUES (@tipo, @date, @product, @amount, @seller)";
+                            command.Parameters.AddWithValue("@tipo", transaction.Type);
+                            command.Parameters.AddWithValue("@date", transaction.Date);
+                            command.Parameters.AddWithValue("@product", transaction.Product);
+                            command.Parameters.AddWithValue("@amount", transaction.Amount);
+                            command.Parameters.AddWithValue("@seller", transaction.Seller);
+                            command.ExecuteNonQuery();
+                        }
                     }
                 }
 
