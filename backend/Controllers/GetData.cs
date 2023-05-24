@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Npgsql;
 using backend.Configuration;
+using System;
+using System.Collections.Generic;
+using NpgsqlTypes;
 
 namespace backend.Controllers
 {
@@ -13,18 +16,22 @@ namespace backend.Controllers
         private readonly string connectionString;
 
         public DataController()
-        {   
+        {
             DatabaseConfiguration.LoadConfiguration();
             connectionString = DatabaseConfiguration.GetConnectionString();
         }
-
+        
         [HttpPost]
-        public IActionResult GetData([FromBody] Filters filters)
-        {   
+        public IActionResult GetData([FromBody] FiltersRequest filters)
+        {
             try
-            {
-                if (filters == null || (string.IsNullOrEmpty(filters.Product) && string.IsNullOrEmpty(filters.Seller)))
-                {
+            {   
+                
+                string? Prod = filters?.Filters?.Product;
+                string? Sell = filters?.Filters?.Seller;
+                
+                if (string.IsNullOrEmpty(Sell) && string.IsNullOrEmpty(Prod))
+                {   
                     var errorResponse = new { error = "InvalidRequest", message = "A solicitação é inválida. Deve ser fornecido pelo menos um valor para 'product' ou 'seller'." };
                     return BadRequest(JsonConvert.SerializeObject(errorResponse));
                 }
@@ -34,63 +41,50 @@ namespace backend.Controllers
                 using (var connection = new NpgsqlConnection(connectionString))
                 {
                     connection.Open();
-
-                    // Consultar as transações agrupadas por produto e vendedor
-                    if (!string.IsNullOrEmpty(filters.Product))
+                  
+                    if (!string.IsNullOrEmpty(Prod) && !string.IsNullOrEmpty(Sell))
                     {
-                        using (var command = new NpgsqlCommand())
-                        {
-                            command.Connection = connection;
-                            command.CommandText = "SELECT product, seller, SUM(amount) as total FROM transaction WHERE product = @product GROUP BY product, seller";
-                            command.Parameters.AddWithValue("@product", filters.Product);
-
-                            using (var reader = command.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    string product = reader.GetString(0);
-                                    string seller = reader.GetString(1);
-                                    decimal total = reader.GetDecimal(2);
-
-                                    DataResult result = new DataResult
-                                    {
-                                        Product = product,
-                                        Seller = seller,
-                                        Total = total
-                                    };
-
-                                    dataResults.Add(result);
-                                }
-                            }
-                        }
+                        var errorResponse = new { error = "InvalidRequest", message = "A solicitação é inválida. Os campos 'product' e 'seller' não podem ser especificados simultaneamente." };
+                        return BadRequest(JsonConvert.SerializeObject(errorResponse));
+                    }
+                    
+                    
+                    string query;
+        
+                    NpgsqlParameter parameter;
+                      
+                    if (!string.IsNullOrEmpty(Prod))
+                    {   
+                        
+                        query = "SELECT product, seller, SUM(amount) as total FROM transaction WHERE product = @product GROUP BY product, seller";
+                        parameter = new NpgsqlParameter("@product", NpgsqlDbType.Text) { Value = Prod };
+                    }
+                    else
+                    {
+                        query = "SELECT seller, product, SUM(amount) as total FROM transaction WHERE seller = @seller GROUP BY seller, product";
+                        parameter = new NpgsqlParameter("@seller", NpgsqlDbType.Varchar) { Value = Sell };
                     }
 
-                    // Consultar as transações agrupadas por vendedor e produto
-                    if (!string.IsNullOrEmpty(filters.Seller))
+                    using (var command = new NpgsqlCommand(query, connection))
                     {
-                        using (var command = new NpgsqlCommand())
+                        command.Parameters.Add(parameter);
+
+                        using (var reader = command.ExecuteReader())
                         {
-                            command.Connection = connection;
-                            command.CommandText = "SELECT seller, product, SUM(amount) as total FROM transaction WHERE seller = @seller GROUP BY seller, product";
-                            command.Parameters.AddWithValue("@seller", filters.Seller);
-
-                            using (var reader = command.ExecuteReader())
+                            while (reader.Read())
                             {
-                                while (reader.Read())
+                                string product = reader.GetString(0);
+                                string seller = reader.GetString(1);
+                                double total = reader.GetDouble(2);
+
+                                DataResult result = new DataResult
                                 {
-                                    string seller = reader.GetString(0);
-                                    string product = reader.GetString(1);
-                                    decimal total = reader.GetDecimal(2);
+                                    Product = product,
+                                    Seller = seller,
+                                    Total = total
+                                };
 
-                                    DataResult result = new DataResult
-                                    {
-                                        Product = product,
-                                        Seller = seller,
-                                        Total = total
-                                    };
-
-                                    dataResults.Add(result);
-                                }
+                                dataResults.Add(result);
                             }
                         }
                     }
@@ -114,14 +108,21 @@ namespace backend.Controllers
 
     public class Filters
     {
-        public string Product { get; set; }
-        public string Seller { get; set; }
+        public string? Product { get; set; }
+        public string? Seller { get; set; }
     }
 
+    public class FiltersRequest
+    {
+        public Filters? Filters { get; set; }
+    }
+
+
+    
     public class DataResult
     {
-        public string Product { get; set; }
-        public string Seller { get; set; }
-        public decimal Total { get; set; }
+        public string? Product { get; set; }
+        public string? Seller { get; set; }
+        public double Total { get; set; }
     }
 }
