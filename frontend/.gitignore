@@ -1,23 +1,3 @@
-# Arquivos e diretórios específicos para C#
-
-## Arquivos de compilação
-*.exe
-*.dll
-*.pdb
-
-## Arquivos gerados automaticamente
-obj/
-bin/
-
-## Diretório de dependências do NuGet
-packages/
-
-## Outros arquivos e diretórios gerados
-*.user
-*.vs
-##dados do banco de dados do container
-/data
-
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies

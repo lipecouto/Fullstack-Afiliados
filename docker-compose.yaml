@@ -3,7 +3,7 @@ services:
   database:
     image: postgres
     ports:
-      - 5432:5432
+      - 5402:5432
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin123
@@ -11,27 +11,15 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      
-  app:
-    build: .
-    restart: always
-    depends_on:
-      - database    
+    networks:
+      mynetwork:
+        ipv4_address: 172.18.0.2
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - 5000:5000
-    depends_on:
-      - database
-  
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - 3000:3000
-    depends_on:
-      - backend
+networks:
+  mynetwork:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1

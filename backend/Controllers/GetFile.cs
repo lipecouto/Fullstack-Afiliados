@@ -28,7 +28,9 @@ namespace backend.Controllers
         public IActionResult GetFile([FromForm] IFormFile file)
         {
             try
-            {
+            {   
+                Console.WriteLine("Chegou aqui");
+                
                 if (file == null || file.Length == 0)
                 {
                     var errorResponse = new { error = "FileNotReceived", message = "O arquivo não foi recebido corretamente." };

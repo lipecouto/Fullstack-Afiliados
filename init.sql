@@ -1,6 +1,6 @@
 -- Criação da tabela transaction_type
 CREATE TABLE transaction_type (
-  tipo INTEGER PRIMARY KEY,
+  tipo SERIAL PRIMARY KEY,
   descricao TEXT,
   natureza TEXT,
   sinal TEXT
