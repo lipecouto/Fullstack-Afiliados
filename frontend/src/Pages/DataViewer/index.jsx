@@ -1,103 +1,144 @@
 import {
     Grid,
+    Autocomplete,
+    TextField,
     Container,
     Fade,
     Box,
     Typography,
     CircularProgress,
     Button,
-    Stepper,
-    Step,
-    Stack,
-    Alert,
-    Snackbar,
-    Backdrop,
-} from '@mui/material'
-import { useState, useEffect } from "react";
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper, 
+} from '@mui/material';
+ 
+ 
+import { useState, useEffect, useContext } from "react";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import useRequest from '../../Hook';
+import { DataContext } from '../../Components/dataContext';
 
-//criando tema padronizado
 
-const useTheme = createTheme({
-    typography: {
-     "fontFamily": `"Roboto", "Helvetica", "Arial", sans-serif`,
-     "fontSize": '1rem',
-    }
- });
+const DataViewer = () => {
 
-const FileSender = () => {
-
-    const [open, setOpen] = useState(false);
-    const [openBackDrop, setOpenBackDrop] = useState(false);
-    const [openSucess, setOpenSucess] = useState(false);
-    const [openError, setOpenError] = useState(false);
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [FileData, setFileData] = useState(null);
+    const { apiData } = useContext(DataContext);
+    const [sellerList, setSellerList] = useState([])
+    const [seller, setSeller] = useState(null)
     const { makeRequest, loading, error, data } = useRequest();
+    const [responseData, setResponseData ] = useState();
 
-    const handleSetFile = (event) => {
-        const file = event.target.files[0];
-        setSelectedFile(file)
+    useEffect(() =>{
+        const sellersList =  apiData.map((el) => {
+                return el.seller;
+            
+        });
 
-        const reader = new FileReader();
-        reader.onload = handleFileRead;
-        reader.readAsText(file);
-    }
-
-    const handleFileRead = (event) => {
-        const content = event.target.result;
-        setFileData(content);
-        // Faça o que for necessário com o conteúdo do arquivo
-      };
-      
-    const handleClick = () => {
-        setOpen(true);
-    };
-
-    const handleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-
-        setOpen(false);
-    };
+        setSellerList(sellersList);
+    }, [apiData]);
     
-    const handleSendFile = async () =>{
-        setOpenBackDrop(true);
-        const formData = new FormData();
+
+    const handleChangeSeller = (event, value) =>{        
+        setSeller(value)
+    }
+ 
+    
+    const handleGetData = async () =>{
         
-        formData.append('file', selectedFile);
-
-        let data = {
-                method: 'post',
-                maxBodyLength: Infinity,
-                url: 'http://localhost:5097/getFile',
-                data : formData
-            };
-
+        const _filtro = {
+            "filters": {
+              "product": "",
+              "seller": seller ? seller : ""
+            }
+          }
+                  const  data = {
+            method: 'post',
+            maxBodyLength: Infinity,
+            url: 'http://localhost:5097/getData',
+            data : _filtro
+        };
         
         const response = await makeRequest(data);
+
         if(loading){
             console.log('loading');  
             return;
         }
+
         if(error){
             console.log('error');
             return;
         }
 
-        setOpenSucess(true);
-        
-        setOpenBackDrop(false);
-        
-        setSelectedFile(null);
-        setFileData(null);
+        setResponseData(response);
     }
+
     return(
-        <>
-        </>
+        <Grid container spacing={0}>
+            <Grid sx={{padding: '15px'}}>
+                <Grid item xs={12} lg={12} display={'flex'} flexDirection={'row'} alignContent={'space-around'}>
+                    <Typography></Typography>
+                    <Autocomplete
+                        disablePortal
+                        id="selectSeller"
+                        onChange={handleChangeSeller}
+                        options={sellerList.filter((value, index, self) => {
+                            return self.indexOf(value) === index;
+                          })}
+                        sx={{ width: 300 }}
+                        renderInput={(params) => <TextField {...params} label="Selecione um vendedor" />}
+                    />
+                    <Button
+                        variant="contained"
+                        component="span"
+                        onClick={handleGetData}
+                        
+                    >   
+                        <Typography
+                            sx={{  fontSize: '0.825rem',
+                                    padding: '10px',
+                                            
+                                }} 
+                        > Buscar Dados </Typography>                                                                                   
+                    </Button>
+                </Grid>
+            </Grid>
+            <TableContainer component={Paper}>
+                <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                    <TableHead>
+                    <TableRow>
+                        <TableCell>Product Name</TableCell>
+                        <TableCell align="right">Total Sell</TableCell>                        
+                    </TableRow>
+                    </TableHead>
+                    <TableBody>
+                       { responseData ? 
+                            responseData.map((row) =>{
+                            console.log(row);
+                            return (<TableRow
+                                        key={row.seller}
+                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                    >{console.log(row)}
+                                        <TableCell component="th" scope="row">
+                                            {row.seller}
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            {row.total}
+                                        </TableCell>
+                                    </TableRow>
+                            )
+                            })
+                            : ''
+                        }
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Grid>
     )
 }
 
-export default FileSender
+export default DataViewer

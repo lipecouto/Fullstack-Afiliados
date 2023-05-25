@@ -13,10 +13,11 @@ import {
     Snackbar,
     Backdrop,
 } from '@mui/material'
-import { useState, useEffect } from "react";
+import { useState, useContext } from "react";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import useRequest from '../../Hook';
-
+import DataViewer from '../DataViewer'
+import { DataContext } from '../../Components/dataContext';
 //criando tema padronizado
 
 const useTheme = createTheme({
@@ -34,7 +35,10 @@ const FileSender = () => {
     const [openError, setOpenError] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [FileData, setFileData] = useState(null);
+    
     const { makeRequest, loading, error, data } = useRequest();
+
+    const { setApiData } = useContext(DataContext);
 
     const handleSetFile = (event) => {
         const file = event.target.files[0];
@@ -61,6 +65,9 @@ const FileSender = () => {
         }
 
         setOpen(false);
+        setOpenSucess(false);
+        setOpenError(false);
+        
     };
     
     const handleSendFile = async () =>{
@@ -75,27 +82,28 @@ const FileSender = () => {
                 url: 'http://localhost:5097/getFile',
                 data : formData
             };
-
         
         const response = await makeRequest(data);
+
         if(loading){
             console.log('loading');  
             return;
         }
+
         if(error){
             console.log('error');
             return;
         }
 
+        setApiData(response);
         setOpenSucess(true);
-        
-        setOpenBackDrop(false);
-        
-        setSelectedFile(null);
-        setFileData(null);
+        setOpenBackDrop(false);       
     }
+
     return(
+
         <ThemeProvider theme={useTheme}>
+           
             <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                 open={openBackDrop}
@@ -148,9 +156,9 @@ const FileSender = () => {
                                     onChange={handleSetFile}
                                 />
                                     <Button
-                                    variant="contained"
-                                    component="span"
-                                    onClick={handleClick}
+                                        variant="contained"
+                                        component="span"
+                                        onClick={handleClick}
                                     >   
                                         <Typography
                                         sx={{  fontSize: '0.825rem',
@@ -201,7 +209,8 @@ const FileSender = () => {
                         </Grid>
                     </Grid>
                 </Grid>
-            </Box>            
+            </Box>   
+                     
         </ThemeProvider>
     )
 }

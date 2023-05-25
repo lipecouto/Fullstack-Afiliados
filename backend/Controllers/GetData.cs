@@ -26,15 +26,14 @@ namespace backend.Controllers
         {
             try
             {   
-                
                 string? Prod = filters?.Filters?.Product;
                 string? Sell = filters?.Filters?.Seller;
                 
-                if (string.IsNullOrEmpty(Sell) && string.IsNullOrEmpty(Prod))
-                {   
-                    var errorResponse = new { error = "InvalidRequest", message = "A solicitação é inválida. Deve ser fornecido pelo menos um valor para 'product' ou 'seller'." };
-                    return BadRequest(JsonConvert.SerializeObject(errorResponse));
-                }
+                //if (string.IsNullOrEmpty(Sell) && string.IsNullOrEmpty(Prod))
+                //{   
+                //    var errorResponse = new { error = "InvalidRequest", message = "A solicitação é inválida. Deve ser fornecido pelo menos um valor para 'product' ou 'seller'." };
+                //    return BadRequest(JsonConvert.SerializeObject(errorResponse));
+                //}
 
                 List<DataResult> dataResults = new List<DataResult>();
 
@@ -42,33 +41,10 @@ namespace backend.Controllers
                 {
                     connection.Open();
                   
-                    if (!string.IsNullOrEmpty(Prod) && !string.IsNullOrEmpty(Sell))
-                    {
-                        var errorResponse = new { error = "InvalidRequest", message = "A solicitação é inválida. Os campos 'product' e 'seller' não podem ser especificados simultaneamente." };
-                        return BadRequest(JsonConvert.SerializeObject(errorResponse));
-                    }
-                    
-                    
-                    string query;
-        
-                    NpgsqlParameter parameter;
-                      
-                    if (!string.IsNullOrEmpty(Prod))
-                    {   
-                        
-                        query = "SELECT product, seller, SUM(amount) as total FROM transaction WHERE product = @product GROUP BY product, seller";
-                        parameter = new NpgsqlParameter("@product", NpgsqlDbType.Text) { Value = Prod };
-                    }
-                    else
-                    {
-                        query = "SELECT seller, product, SUM(amount) as total FROM transaction WHERE seller = @seller GROUP BY seller, product";
-                        parameter = new NpgsqlParameter("@seller", NpgsqlDbType.Varchar) { Value = Sell };
-                    }
+                    string query = "SELECT product, seller, SUM(amount) AS total FROM transaction GROUP BY product, seller";
 
                     using (var command = new NpgsqlCommand(query, connection))
                     {
-                        command.Parameters.Add(parameter);
-
                         using (var reader = command.ExecuteReader())
                         {
                             while (reader.Read())
