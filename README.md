@@ -1,10 +1,23 @@
 # Fullstack-Afiliados
 
-Este repositório contém uma API para gerenciamento de afiliados, juntamente com um aplicativo de front-end em Angular.
+Este repositório contém uma API para leitura de arquivo .txt, juntamente com um aplicativo de front-end feito com React.
+
+
+## FRONTEND
+
+O Frontend foi desenvolvido utilizando REACTJS e possui alguns frameworks que auxiliam no desenvolvimento do projeto:
+
+ - React-router-dom
+ - MUI Material e dependências
+ - Axios
 
 ## API
 
-A API foi desenvolvida utilizando o framework ASP.NET Core e oferece endpoints para criar, ler, atualizar e excluir afiliados. Os dados são armazenados em um banco de dados PostgreSQL.
+A API foi desenvolvida utilizando o framework ASP.NET Core e oferece endpoints para criar e ler os dados que são armazenados em um banco de dados PostgreSQL. A bibliotecas adicionais ao projeto são:
+ - DotNetEnv
+ - Newtonsoft.Json
+ - Npgsql
+ - xunit
 
 ### Endpoints da API
 
@@ -36,10 +49,17 @@ O projeto inclui testes unitários para o FrontEnd, que podem ser executados usa
 
 # Fullstack-Afiliados - English Version
 
-This repository contains an API for affiliate management, along with an Angular front-end application.
+This repository contains an API for affiliate management, along with an React front-end application.
+
+## Front-end
+The front-end application is developed using ReactJS and utilizes several frameworks to aid in the project's development:
+
+ - React-router-dom
+ - MUI Material and dependencies
+ - Axios
 
 ## API
-The API is developed using the ASP.NET Core framework and provides endpoints for creating, reading, updating, and deleting affiliates. The data is stored in a PostgreSQL database.
+The API is developed using the ASP.NET Core framework and provides endpoints for creating and reading the data is stored in a PostgreSQL database.
 
 ## API Endpoints
  - `POST localhost:5097/getFile:` Registers the file on the server, sending the data to the database.
@@ -62,3 +82,6 @@ The project includes unit tests for the API, which can be executed using the dot
 The project also includes unit tests for the front-end, which can be executed using the npx jest command. Make sure you are in the `frontend/` directory and run the following command:
 
 Feel free to contribute to this project with any improvements. If you encounter any issues or have suggestions, open an issue so that we can discuss them.
+
+---
+This is a challenge by Coodesh
