@@ -1,0 +1,14 @@
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0.304
+
+WORKDIR /app
+
+COPY . .
+
+RUN dotnet restore
+
+RUN dotnet build --configuration Release --no-restore
+
+EXPOSE 5097
+
+CMD ["dotnet", "run", "--no-build", "--urls", "http://0.0.0.0:5097"]

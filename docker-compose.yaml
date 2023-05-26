@@ -15,6 +15,30 @@ services:
       mynetwork:
         ipv4_address: 172.18.0.2
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend:/app
+    networks:
+      mynetwork:
+        ipv4_address: 172.18.0.10
+
+    backend:
+      build:
+        context: ./backend
+        dockerfile: Dockerfile
+      ports:
+        - 5000:5000
+      volumes:
+        - ./backend:/app
+      networks:
+      mynetwork:
+        ipv4_address: 172.18.0.20
+
 networks:
   mynetwork:
     driver: bridge
